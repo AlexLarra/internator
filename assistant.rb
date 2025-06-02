@@ -6,6 +6,7 @@ require_relative 'codex_service'
 require 'net/http'
 require 'uri'
 require 'json'
+require 'tempfile'
 
 # Parse command-line arguments: PR objectives and optional delay between iterations
 usage = "❌ Usage: ruby #{File.basename($0)} \"<PR Objectives>\" [delay_mins]"
@@ -74,10 +75,21 @@ def auto_commit
   status = `git diff --cached --name-status`
   content = `git diff --cached`
   diff = "File status:\n#{status}\n\nDiff:\n#{content}"
-  commit_msg = generate_commit_message(diff)
-  system('git', 'commit', '-m', commit_msg)
-  short_msg = commit_msg.length > 50 ? "#{commit_msg[0,50]}..." : commit_msg
-  puts "✅ Commit made: #{commit_msg}"
+  commit_msg = generate_commit_message(diff) || ''
+  short_msg = ''
+  # Write full commit message to a temp file and commit via -F
+  Tempfile.create('assistant-commit') do |file|
+    file.write(commit_msg)
+    file.flush
+    file.close
+    if system('git', 'commit', '-F', file.path)
+      first_line = commit_msg.lines.first.to_s.strip
+      short_msg = first_line.length > 50 ? "#{first_line[0,50]}..." : first_line
+      puts "✅ Commit made: #{short_msg}"
+    else
+      puts "❌ Error committing"
+    end
+  end
 
   if system('git', 'push')
     puts "✅ Push successful"
