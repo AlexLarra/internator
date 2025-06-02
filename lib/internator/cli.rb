@@ -46,7 +46,7 @@ module Internator
             break
           end
 
-          auto_commit(objectives, iteration)
+          auto_commit
           puts "⏳ Waiting #{delay_mins} minutes for next iteration... Current time: #{Time.now.strftime("%Y-%m-%d %H:%M:%S")}"
           sleep(delay_mins * 60)
           iteration += 1
@@ -107,22 +107,23 @@ module Internator
     end
 
     # Stages changes, generates a commit message via OpenAI, commits and pushes
-    def self.auto_commit(objectives, iteration)
+    def self.auto_commit
       system("git", "add", "-A")
       # Capture file status (added, modified, deleted) and full diff
       status = `git diff --cached --name-status`
       content = `git diff --cached`
       diff = "File status:\n#{status}\n\nDiff:\n#{content}"
       commit_msg = generate_commit_message(diff)
-      commit_msg ||= "#{objectives} (iteration #{iteration})"
       system("git", "commit", "-m", commit_msg)
+      short_msg = commit_msg.length > 50 ? "#{commit_msg[0,50]}..." : commit_msg
       puts "✅ Commit made: #{commit_msg}"
+
       if system("git", "push")
         puts "✅ Push successful"
-        system("notify-send", "Assistant", "✅ Push: #{commit_msg}")
+        system("notify-send", "Assistant", "✅ Push: #{short_msg}")
       else
         puts "❌ Error pushing to remote"
-        system("notify-send", "Assistant", "❌ Error pushing to remote")
+        system("notify-send", "Assistant", "❌ Error pushing to remote: #{short_msg}")
       end
     end
   end
