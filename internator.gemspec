@@ -7,8 +7,8 @@ Gem::Specification.new do |spec|
   spec.email         = ["clausrybnic@gmail.com"]
 
   spec.summary       = "CLI tool that automates iterative pull request improvements using OpenAI's Codex"
-  spec.description   = "Internator cycles through objectives, makes incremental changes, commits via your shell functions, and optionally waits between iterations."
-  spec.homepage      = "https://github.com/your-username/internator"
+  spec.description   = "Internator is a Ruby-based CLI tool that automates iterative pull request improvements using OpenAI's Codex. It cycles through objectives, makes incremental changes, automatically commits and pushes each update, and optionally waits between iterations."
+  spec.homepage      = "https://github.com/AlexLarra/internator"
   spec.license       = "MIT"
 
   spec.files         = Dir.glob("lib/**/*.rb") + ["README.md", "LICENSE", "internator.gemspec", "bin/internator"]
