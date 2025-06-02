@@ -14,14 +14,6 @@ Internator is a Ruby-based CLI tool that automates iterative pull request improv
 gem install internator
 ```
 
-Alternatively, to install from source:
-```bash
-git clone https://github.com/your-username/internator.git
-cd internator
-gem build internator.gemspec
-gem install internator-0.1.0.gem
-```
-
  ## Usage
 
 Run the `internator` command:
