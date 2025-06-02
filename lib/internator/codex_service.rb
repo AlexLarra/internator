@@ -1,4 +1,4 @@
-module Becario
+module Internator
   # Service for executing the Codex CLI with full-auto mode
   class CodexService
     # @param instruction [String] Text instruction for Codex
@@ -7,7 +7,6 @@ module Becario
     end
 
     # Executes `codex --full-auto` with the provided instruction.
-    # Streams stdout and stderr to the console in real time.
     # @return [Integer] Exit code of the Codex process
     def call
       command = [

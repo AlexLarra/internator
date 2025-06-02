@@ -1,6 +1,6 @@
- # Becario
+# Internator
 
- Becario is a Ruby-based CLI tool that automates iterative pull request improvements using OpenAI's Codex. It cycles through objectives, makes incremental changes, commits via your shell functions, and optionally waits between iterations.
+Internator is a Ruby-based CLI tool that automates iterative pull request improvements using OpenAI's Codex. It cycles through objectives, makes incremental changes, commits via your shell functions, and optionally waits between iterations.
 
  ## Requirements
 
@@ -19,23 +19,23 @@
  ## Installation
 
 ```bash
-gem install becario
+gem install internator
 ```
 
 Alternatively, to install from source:
 ```bash
-git clone https://github.com/your-username/becario.git
-cd becario
-gem build becario.gemspec
-gem install becario-0.1.0.gem
+git clone https://github.com/your-username/internator.git
+cd internator
+gem build internator.gemspec
+gem install internator-0.1.0.gem
 ```
 
  ## Usage
 
-Run the `becario` command:
+Run the `internator` command:
 
 ```bash
-becario "<PR Objectives>" [delay_mins]
+internator "<PR Objectives>" [delay_mins]
 ```
 
  - `<PR Objectives>`: Description of what the pull request should achieve.
@@ -43,7 +43,7 @@ becario "<PR Objectives>" [delay_mins]
 
 Example:
 ```bash
-becario "Refactor authentication flow and add tests" 10
+internator "Refactor authentication flow and add tests" 10
 ```
 
  ## Contributing

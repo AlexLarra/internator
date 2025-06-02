@@ -1,7 +1,7 @@
-require "becario/codex_service"
+require "internator/codex_service"
 
-module Becario
-  # Command-line interface for the Becario gem
+module Internator
+  # Command-line interface for the Internator gem
   class CLI
     def self.run(args = ARGV)
       unless system("which codex > /dev/null 2>&1")
@@ -13,7 +13,7 @@ module Becario
       end
 
       if args.empty? || args.size > 2
-        abort "❌ Usage: becario \"<PR Objectives>\" [delay_mins]"
+        abort "❌ Usage: internator \"<PR Objectives>\" [delay_mins]"
       end
 
       objectives = args[0]
