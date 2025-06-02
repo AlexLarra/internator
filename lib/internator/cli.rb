@@ -55,7 +55,6 @@ module Internator
         puts "🚨 Critical error: #{e.message}"
       ensure
         puts "\n🏁 Process completed - #{Time.now.strftime("%Y-%m-%d %H:%M:%S")}"
-        system("notify-send", "Assistant", "🏁 Process completed - #{Time.now.strftime("%Y-%m-%d %H:%M:%S")}")
       end
     end
 
@@ -106,24 +105,30 @@ module Internator
       nil
     end
 
-    # Stages changes, generates a commit message via OpenAI, commits and pushes
-    def self.auto_commit
-      system("git", "add", "-A")
-      # Capture file status (added, modified, deleted) and full diff
+    def auto_commit
+      system('git', 'add', '-A')
       status = `git diff --cached --name-status`
       content = `git diff --cached`
       diff = "File status:\n#{status}\n\nDiff:\n#{content}"
-      commit_msg = generate_commit_message(diff)
-      system("git", "commit", "-m", commit_msg)
-      short_msg = commit_msg.length > 50 ? "#{commit_msg[0,50]}..." : commit_msg
-      puts "✅ Commit made: #{commit_msg}"
+      commit_msg = generate_commit_message(diff) || ''
 
-      if system("git", "push")
+      # Write full commit message to a temp file and commit via -F
+      Tempfile.create('internator-commit') do |file|
+        file.write(commit_msg)
+        file.flush
+        file.close
+        if system('git', 'commit', '-F', file.path)
+          first_line = commit_msg.lines.first.to_s.strip
+          puts "✅ Commit made: #{first_line}"
+        else
+          puts "❌ Error committing"
+        end
+      end
+
+      if system('git', 'push')
         puts "✅ Push successful"
-        system("notify-send", "Assistant", "✅ Push: #{short_msg}")
       else
         puts "❌ Error pushing to remote"
-        system("notify-send", "Assistant", "❌ Error pushing to remote: #{short_msg}")
       end
     end
   end
