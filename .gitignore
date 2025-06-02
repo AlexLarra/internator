@@ -1,0 +1,2 @@
+# Ignore Ruby gem build artifacts
+*.gem
