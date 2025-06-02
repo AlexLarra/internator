@@ -1,6 +1,6 @@
 # Internator
 
-Internator is a Ruby-based CLI tool that automates iterative pull request improvements using OpenAI's Codex. It cycles through objectives, makes incremental changes, commits via your shell functions, and optionally waits between iterations.
+Internator is a Ruby-based CLI tool that automates iterative pull request improvements using OpenAI's Codex. It cycles through objectives, makes incremental changes, automatically commits and pushes each update, and optionally waits between iterations.
 
  ## Requirements
 

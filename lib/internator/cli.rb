@@ -1,4 +1,7 @@
 require "internator/codex_service"
+require "net/http"
+require "uri"
+require "json"
 
 module Internator
   # Command-line interface for the Internator gem
@@ -43,7 +46,7 @@ module Internator
             break
           end
 
-          auto_commit
+          auto_commit(objectives, iteration)
           puts "⏳ Waiting #{delay_mins} minutes for next iteration... Current time: #{Time.now.strftime("%Y-%m-%d %H:%M:%S")}"
           sleep(delay_mins * 60)
           iteration += 1
@@ -75,14 +78,48 @@ module Internator
       CodexService.new(prompt).call
     end
 
-    def self.auto_commit
+    # Generate a concise commit message for the given diff using OpenAI
+    def self.generate_commit_message(diff)
+      api_key = ENV["OPENAI_API_KEY"]
+      uri = URI("https://api.openai.com/v1/chat/completions")
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      headers = {
+        "Content-Type" => "application/json",
+        "Authorization" => "Bearer #{api_key}"
+      }
+      body = {
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "You are a helpful assistant that generates concise git commit messages." },
+          { role: "user", content: "Generate a concise commit message for the following diff:\n\n#{diff}" }
+        ],
+        temperature: 0.3
+      }
+      response = http.post(uri.request_uri, JSON.generate(body), headers)
+      if response.is_a?(Net::HTTPSuccess)
+        json = JSON.parse(response.body)
+        msg = json.dig("choices", 0, "message", "content")
+        return msg.strip if msg
+      end
+    rescue
+      nil
+    end
+
+    # Stages changes, generates a commit message via OpenAI, commits and pushes
+    def self.auto_commit(objectives, iteration)
       system("git", "add", "-A")
-      shell = ENV.fetch("SHELL", "/bin/zsh")
-      system(shell, "-i", "-c", "iacommit <<< s")
-      puts "✅ Commit made: #{`git log -1 --pretty=%B`.strip}"
+      # Capture file status (added, modified, deleted) and full diff
+      status = `git diff --cached --name-status`
+      content = `git diff --cached`
+      diff = "File status:\n#{status}\n\nDiff:\n#{content}"
+      commit_msg = generate_commit_message(diff)
+      commit_msg ||= "#{objectives} (iteration #{iteration})"
+      system("git", "commit", "-m", commit_msg)
+      puts "✅ Commit made: #{commit_msg}"
       if system("git", "push")
         puts "✅ Push successful"
-        system("notify-send", "Assistant", "✅ Push: #{`git log -1 --pretty=%B`.strip}")
+        system("notify-send", "Assistant", "✅ Push: #{commit_msg}")
       else
         puts "❌ Error pushing to remote"
         system("notify-send", "Assistant", "❌ Error pushing to remote")
