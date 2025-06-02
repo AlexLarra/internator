@@ -13,7 +13,7 @@
    ```tmux
    # Ensure OPENAI_API_KEY is passed into tmux sessions if you use it.
    set -g update-environment "OPENAI_API_KEY"
-   run-shell "tmux set-environment -g OPENAI_API_KEY $OPENAI_API_KEY"
+   set-environment -g OPENAI_API_KEY "#{ENV:OPENAI_API_KEY}"
    ```
 
  ## Installation
