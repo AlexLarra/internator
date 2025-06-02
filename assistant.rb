@@ -1,10 +1,11 @@
 #!/usr/bin/env ruby
 # assistant.rb
-# Note: This script requires the shell functions `iacommit()` and `ask_openai()`
-# These functions are available at:
-#   https://github.com/AlexLarra/dotfiles/blob/master/sh/sh_functions
-# Make sure to load these functions into your shell environment (e.g., in .zshrc or .bashrc).
+# This script automates commits using the OpenAI API.
+# It requires the OPENAI_API_KEY environment variable to be set.
 require_relative 'codex_service'
+require 'net/http'
+require 'uri'
+require 'json'
 
 # Parse command-line arguments: PR objectives and optional delay between iterations
 usage = "❌ Usage: ruby #{File.basename($0)} \"<PR Objectives>\" [delay_mins]"
@@ -20,6 +21,9 @@ delay_mins = if ARGV[1]
              else
                0
              end
+
+abort("❌ OPENAI_API_KEY not set. Please set the environment variable.") if ENV["OPENAI_API_KEY"].to_s.strip.empty?
+abort("❌ 'codex' CLI is not installed or not in PATH. Please install it from https://github.com/openai/codex") unless system("which codex > /dev/null 2>&1")
 
 def codex_cycle(iteration)
   prompt = <<~PROMPT
@@ -38,21 +42,49 @@ def codex_cycle(iteration)
   CodexService.new(prompt).call
 end
 
+def generate_commit_message(diff)
+  api_key = ENV["OPENAI_API_KEY"]
+  uri = URI("https://api.openai.com/v1/chat/completions")
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+  headers = {
+    "Content-Type" => "application/json",
+    "Authorization" => "Bearer #{api_key}"
+  }
+  body = {
+    model: "gpt-4o-mini",
+    messages: [
+      { role: "system", content: "You are a helpful assistant that generates concise git commit messages." },
+      { role: "user", content: "Generate a concise commit message for the following diff:\n\n#{diff}" }
+    ],
+    temperature: 0.3
+  }
+  response = http.post(uri.request_uri, JSON.generate(body), headers)
+  if response.is_a?(Net::HTTPSuccess)
+    json = JSON.parse(response.body)
+    msg = json.dig("choices", 0, "message", "content")
+    return msg.strip if msg
+  end
+rescue
+  nil
+end
+
 def auto_commit
   system('git', 'add', '-A')
-  # Run iacommit in an interactive shell (e.g., zsh) to load user functions
-  shell = ENV.fetch('SHELL', '/bin/zsh')
-  system(shell, '-i', '-c', 'iacommit <<< s')
-  puts "✅ Commit made: #{`git log -1 --pretty=%B`.strip}"
-  # Push changes to remote repository
+  status = `git diff --cached --name-status`
+  content = `git diff --cached`
+  diff = "File status:\n#{status}\n\nDiff:\n#{content}"
+  commit_msg = generate_commit_message(diff)
+  system('git', 'commit', '-m', commit_msg)
+  short_msg = commit_msg.length > 50 ? "#{commit_msg[0,50]}..." : commit_msg
+  puts "✅ Commit made: #{commit_msg}"
+
   if system('git', 'push')
     puts "✅ Push successful"
-    # Notify the user that commit and push have completed
-    system('notify-send', 'Assistant', "✅ Push: #{`git log -1 --pretty=%B`.strip}")
+    system('notify-send', 'Assistant', "✅ Push: #{short_msg}")
   else
     puts "❌ Error pushing to remote"
-    # Notify the user about the push failure
-    system('notify-send', 'Assistant', '❌ Error pushing to remote')
+    system('notify-send', 'Assistant', "❌ Error pushing to remote: #{short_msg}")
   end
 end
 
