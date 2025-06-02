@@ -6,7 +6,7 @@
 
  - Ruby (>= 2.5)
  - [Codex CLI](https://github.com/openai/codex) installed and in your PATH
- - Shell functions `iacommit()` and `ask_openai()` available in your `.zshrc` or `.bashrc` (see https://github.com/AlexLarra/dotfiles/blob/master/sh/sh_functions)
+- Shell function `iacommit()` available in your shell environment (e.g., in your `.zshrc` or `.bashrc`). See https://github.com/AlexLarra/dotfiles/blob/master/sh/sh_functions for reference.
  - Environment variable `OPENAI_API_KEY` set to your OpenAI API key
  - If you use tmux, ensure `OPENAI_API_KEY` is forwarded into tmux sessions. Add the following to your `~/.tmux.conf`, or copy lines 5–8 from https://github.com/AlexLarra/dotfiles/blob/283b3a3095994fbb2407338fd8993d640cdd1405/code/tmux/.tmux.conf#L5-L8:
 
@@ -18,26 +18,33 @@
 
  ## Installation
 
- ```bash
- cd ~/workspace  # navigate to your workspace
- git clone https://github.com/your-username/becario.git
- ```
+```bash
+gem install becario
+```
+
+Alternatively, to install from source:
+```bash
+git clone https://github.com/your-username/becario.git
+cd becario
+gem build becario.gemspec
+gem install becario-0.1.0.gem
+```
 
  ## Usage
 
- From your project root (parent directory of `becario` in your workspace), run:
+Run the `becario` command:
 
- ```bash
- ruby ../becario/assistant.rb "<PR Objectives>" [delay_mins]
- ```
+```bash
+becario "<PR Objectives>" [delay_mins]
+```
 
  - `<PR Objectives>`: Description of what the pull request should achieve.
  - `[delay_mins]`: (Optional) Minutes to wait between iterations (default: 0).
 
- Example:
- ```bash
- ruby ../becario/assistant.rb "Refactor authentication flow and add tests" 10
- ```
+Example:
+```bash
+becario "Refactor authentication flow and add tests" 10
+```
 
  ## Contributing
 
