@@ -58,8 +58,41 @@ module Internator
       end
     end
 
+    # Detect the repository's default branch across remotes (e.g., main, master, develop)
+    def self.detect_default_base
+      remotes = `git remote`.split("\n").reject(&:empty?)
+      remotes.unshift('origin') unless remotes.include?('origin')
+      remotes.each do |remote|
+        # Try to resolve remote HEAD via rev-parse
+        ref = `git rev-parse --abbrev-ref #{remote}/HEAD 2>/dev/null`.strip
+        return ref unless ref.empty?
+        # Fallback to symbolic-ref
+        sym = `git symbolic-ref refs/remotes/#{remote}/HEAD 2>/dev/null`.strip
+        if sym.start_with?('refs/remotes/')
+          return sym.sub('refs/remotes/', '')
+        end
+      end
+      nil
+    end
+    
+    # Executes one Codex iteration by diffing against the appropriate base branch
     def self.codex_cycle(objectives, iteration)
-      current_diff = `git diff master 2>/dev/null`
+      # Determine configured upstream and current branch name
+      upstream = `git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null`.strip
+      current_branch = `git rev-parse --abbrev-ref HEAD`.strip
+      # Choose diff base:
+      # 1) If upstream is tracking current branch, use remote default branch
+      # 2) Else if upstream exists, diff against that
+      # 3) Otherwise fallback to remote default branch or master
+      if !upstream.empty? && upstream.split('/').last == current_branch
+        base = detect_default_base || upstream
+      elsif !upstream.empty?
+        base = upstream
+      else
+        base = detect_default_base || 'master'
+      end
+      # Get the diff against the chosen base
+      current_diff = `git diff #{base} 2>/dev/null`
       current_diff = "No initial changes" if current_diff.strip.empty?
       prompt = <<~PROMPT
         Objectives: #{objectives}
