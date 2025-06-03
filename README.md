@@ -6,9 +6,9 @@ Internator is a Ruby-based CLI tool that automates iterative pull request improv
 
  ## Requirements
 
- - Ruby (>= 2.5)
- - [Codex CLI](https://github.com/openai/codex) installed and in your PATH
- - Environment variable `OPENAI_API_KEY` set to your OpenAI API key
+ - Ruby (>= 2.5).
+ - [Codex CLI](https://github.com/openai/codex) installed.
+ - Environment variable `OPENAI_API_KEY` set to your OpenAI API key.
 
  ## Installation
 
@@ -18,7 +18,7 @@ gem install internator
 
  ## Usage
 
-Run the `internator` command:
+Push to Github your new empty branch and run the `internator` command:
 
 ```bash
 internator "<PR Objectives>" [delay_mins]
