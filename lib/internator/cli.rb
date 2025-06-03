@@ -59,7 +59,10 @@ module Internator
     end
 
     def self.codex_cycle(objectives, iteration)
-      current_diff = `git diff master 2>/dev/null`
+      # Determine base branch for diff: use upstream if set, otherwise default to master
+      upstream = `git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null`.strip
+      upstream = 'master' if upstream.empty?
+      current_diff = `git diff #{upstream} 2>/dev/null`
       current_diff = "No initial changes" if current_diff.strip.empty?
       prompt = <<~PROMPT
         Objectives: #{objectives}
