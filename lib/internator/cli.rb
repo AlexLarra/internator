@@ -1,4 +1,3 @@
-require "internator/codex_service"
 require "net/http"
 require "uri"
 require "json"
@@ -74,7 +73,7 @@ module Internator
       end
       nil
     end
-    
+
     # Executes one Codex iteration by diffing against the appropriate base branch
     def self.codex_cycle(objectives, iteration)
       # Determine configured upstream and current branch name
