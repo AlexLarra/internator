@@ -1,6 +1,7 @@
 require "net/http"
 require "uri"
 require "json"
+require "tempfile"
 
 module Internator
   # Command-line interface for the Internator gem
@@ -137,7 +138,7 @@ module Internator
       nil
     end
 
-    def auto_commit
+    def self.auto_commit
       system('git', 'add', '-A')
       status = `git diff --cached --name-status`
       content = `git diff --cached`
