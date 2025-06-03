@@ -14,4 +14,8 @@ Gem::Specification.new do |spec|
   spec.files         = Dir.glob("lib/**/*.rb") + ["README.md", "LICENSE", "internator.gemspec", "bin/internator"]
   spec.executables   = ["internator"]
   spec.require_paths = ["lib"]
+
+  # Development dependencies for building and releasing the gem
+  spec.add_development_dependency "bundler", "~> 2.0"
+  spec.add_development_dependency "rake"
 end

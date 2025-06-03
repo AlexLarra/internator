@@ -1,3 +1,5 @@
+[![Gem Version](https://badge.fury.io/rb/internator.svg)](https://badge.fury.io/rb/internator)
+
 # Internator
 
 Internator is a Ruby-based CLI tool that automates iterative pull request improvements using OpenAI's Codex. It cycles through objectives, makes incremental changes, automatically commits and pushes each update, and optionally waits between iterations.
@@ -41,3 +43,7 @@ set-environment -g OPENAI_API_KEY "#{ENV:OPENAI_API_KEY}"
  ## Contributing
 
  Feel free to open issues or submit pull requests.
+
+ ## License
+
+ Internator is released under the MIT License. See the [LICENSE](LICENSE) file for details.
