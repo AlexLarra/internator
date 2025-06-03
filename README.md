@@ -43,3 +43,7 @@ set-environment -g OPENAI_API_KEY "#{ENV:OPENAI_API_KEY}"
  ## Contributing
 
  Feel free to open issues or submit pull requests.
+
+ ## License
+
+ Internator is released under the MIT License. See the [LICENSE](LICENSE) file for details.
