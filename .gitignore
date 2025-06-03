@@ -1,3 +1,4 @@
 # Ignore Ruby gem build artifacts
 *.gem
 /pkg
+Gemfile.lock
