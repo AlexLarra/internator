@@ -31,6 +31,8 @@ Example:
 ```bash
 internator "Refactor authentication flow and add tests" 10
 ```
+For more detailed usage tips, see the [Usage Tips wiki page](https://github.com/AlexLarra/internator/wiki/Usage-tips).
+
  ## Contributing
 
  Feel free to open issues or submit pull requests.
