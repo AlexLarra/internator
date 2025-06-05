@@ -1,4 +1,5 @@
 [![Gem Version](https://badge.fury.io/rb/internator.svg)](https://badge.fury.io/rb/internator)
+[![Gem Version](https://img.shields.io/gem/v/internator.svg)](https://rubygems.org/gems/internator)
 
 # Internator
 
