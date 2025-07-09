@@ -104,7 +104,7 @@ module Internator
         2. Make ONLY one incremental change.
         3. Prioritize completing main objectives.
         4. Do not overuse code comments; if the method name says it all, comments are not necessary.
-        5. Do not add a blank line at the end of each file.
+        5. Please treat files as if Vim were saving them with `set binary` and `set noeol`, i.e. do not add a final newline at the end of the file.
       PROMPT
 
       CodexService.new(prompt).call

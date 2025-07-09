@@ -11,10 +11,8 @@ module Internator
     def call
       command = [
         "codex",
+        "exec",
         "--full-auto",
-        "--quiet",
-        "--writable-root", Dir.pwd,
-        "--full-stdout",
         @instruction
       ]
       system(*command)
