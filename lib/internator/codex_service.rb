@@ -10,7 +10,8 @@ module Internator
     # @return [Integer] Exit code of the Codex process
     def call
       command = [
-        "codex exec",
+        "codex",
+        "exec",
         "--full-auto",
         @instruction
       ]
