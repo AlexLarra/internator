@@ -2,10 +2,35 @@ require "net/http"
 require "uri"
 require "json"
 require "tempfile"
+require "yaml"
 
 module Internator
   # Command-line interface for the Internator gem
   class CLI
+    CONFIG_FILE = File.expand_path("~/.internator_config")
+
+    # Load custom instructions from config or fall back to built-in defaults
+    def self.instructions
+      if File.exist?(CONFIG_FILE)
+        begin
+          config = YAML.load_file(CONFIG_FILE)
+          if config.is_a?(Hash) && config['INSTRUCTIONS']
+            return config['INSTRUCTIONS'].strip
+          end
+        rescue => e
+          warn "⚠️ Could not parse config file #{CONFIG_FILE}: #{e.message}"
+        end
+      end
+
+      <<~INSTRUCTIONS.chomp
+        1. If there are changes in the PR, first check if it has already been completed; if so, do nothing.
+        2. Make ONLY one incremental change.
+        3. Prioritize completing main objectives.
+        4. Do not overuse code comments; if the method name says it all, comments are not necessary.
+        5. Please treat files as if Vim were saving them with `set binary` and `set noeol`, i.e. do not add a final newline at the end of the file.
+      INSTRUCTIONS
+    end
+
     def self.run(args = ARGV)
       unless system("which codex > /dev/null 2>&1")
         abort "❌ 'codex' CLI is not installed or not in PATH. Please install it from https://github.com/openai/codex"
@@ -94,17 +119,15 @@ module Internator
       # Get the diff against the chosen base
       current_diff = `git diff #{base} 2>/dev/null`
       current_diff = "No initial changes" if current_diff.strip.empty?
+      custom_instructions = instructions
+      formatted = custom_instructions.gsub("\n", "\n        ")
       prompt = <<~PROMPT
         Objectives: #{objectives}
         Iteration: #{iteration}
         Current Pull Request: #{current_diff}
 
         Instructions:
-        1. If there are changes in the PR, first check if it has already been completed; if so, do nothing.
-        2. Make ONLY one incremental change.
-        3. Prioritize completing main objectives.
-        4. Do not overuse code comments; if the method name says it all, comments are not necessary.
-        5. Please treat files as if Vim were saving them with `set binary` and `set noeol`, i.e. do not add a final newline at the end of the file.
+        #{formatted}
       PROMPT
 
       CodexService.new(prompt).call
