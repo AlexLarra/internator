@@ -35,11 +35,11 @@ For more detailed usage tips, see the [Usage Tips wiki page](https://github.com/
 
 ## Configuration
 
-By default, Internator uses a built-in set of instructions. You can override them by creating a configuration file at `~/.internator_config` in YAML format. The file should define an `INSTRUCTIONS` key whose value is the instruction text. For example:
+Internator reads custom instructions from a YAML file at `~/.internator_config.yml`. The file must define an `instructions` key whose value is the instruction text. For example:
 
 ```yaml
-# ~/.internator_config
-INSTRUCTIONS: |
+# ~/.internator_config.yml
+instructions: |
   1. If there are changes in the PR, first check if it has already been completed; if so, do nothing.
   2. Make ONLY one incremental change.
   3. Prioritize completing main objectives.
@@ -47,7 +47,7 @@ INSTRUCTIONS: |
   5. Please treat files as if Vim were saving them with `set binary` and `set noeol`, i.e. do not add a final newline at the end of the file.
 ```
 
-When present, Internator will use these instructions instead of the defaults.
+When present, Internator will use these instructions instead of the built-in defaults.
 
 ## Contributing
 

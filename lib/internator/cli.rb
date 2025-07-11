@@ -7,15 +7,17 @@ require "yaml"
 module Internator
   # Command-line interface for the Internator gem
   class CLI
-    CONFIG_FILE = File.expand_path("~/.internator_config")
+    # Configuration file for custom instructions (YAML format).
+    CONFIG_FILE = File.expand_path('~/.internator_config.yml')
 
     # Load custom instructions from config or fall back to built-in defaults
     def self.instructions
+      # Load custom instructions from ~/.internator_config.yml or fall back to built-in defaults
       if File.exist?(CONFIG_FILE)
         begin
           config = YAML.load_file(CONFIG_FILE)
-          if config.is_a?(Hash) && config['INSTRUCTIONS']
-            return config['INSTRUCTIONS'].strip
+          if config.is_a?(Hash) && config['instructions'].is_a?(String)
+            return config['instructions'].strip
           end
         rescue => e
           warn "⚠️ Could not parse config file #{CONFIG_FILE}: #{e.message}"
