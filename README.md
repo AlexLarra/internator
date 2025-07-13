@@ -25,7 +25,7 @@ internator "<PR Objectives>" [delay_mins]
 ```
 
  - `<PR Objectives>`: Description of what the pull request should achieve.
- - `[delay_mins]`: (Optional) Minutes to wait between iterations (default: 0).
+ - `[delay_mins]`: (Optional) Minutes to wait between commits (default: 0).
 
 Example:
 ```bash
