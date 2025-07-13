@@ -143,8 +143,7 @@ module Internator
         Iteration: #{iteration}
         Current Pull Request: #{current_diff}
 
-        Instructions:
-        #{instructions.gsub("\n", "\n        ")}
+        #{instructions}
       PROMPT
 
       CodexService.new(prompt).call
