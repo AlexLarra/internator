@@ -25,17 +25,29 @@ module Internator
 
     # Load custom instructions from config or fall back to built-in defaults
     def self.instructions
-      # Load custom instructions from ~/.internator_config.yml or fall back to built-in defaults
-      if config.is_a?(Hash) && config['instructions'].is_a?(String)
-        return config['instructions'].strip
-      end
-
-      <<~INSTRUCTIONS.chomp
+      mandatory = <<~MANDATORY_INSTRUCTIONS
         1. If there are changes in the PR, first check if it has already been completed; if so, do nothing.
         2. Make ONLY one incremental change.
         3. Prioritize completing main objectives.
-        4. Do not overuse code comments; if the method name says it all, comments are not necessary.
-        5. Please treat files as if Vim were saving them with `set binary` and `set noeol`, i.e. do not add a final newline at the end of the file.
+      MANDATORY_INSTRUCTIONS
+
+      # Load custom instructions from ~/.internator_config.yml or fall back to built-in defaults
+      custom =
+        if config.is_a?(Hash) && config['instructions'].is_a?(String)
+          config['instructions'].strip
+        else
+          <<~CUSTOM_INSTRUCTIONS
+            1. Do not overuse code comments; if the method name says it all, comments are not necessary.
+            2. Please treat files as if Vim were saving them with `set binary` and `set noeol`, i.e. do not add a final newline at the end of the file.
+          CUSTOM_INSTRUCTIONS
+        end
+
+      <<~INSTRUCTIONS.chomp
+      Mandatory instructions:
+      #{mandatory}
+
+      Custom instructions:
+      #{custom}
       INSTRUCTIONS
     end
 
