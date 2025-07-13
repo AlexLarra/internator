@@ -138,15 +138,13 @@ module Internator
       # Get the diff against the chosen base
       current_diff = `git diff #{base} 2>/dev/null`
       current_diff = "No initial changes" if current_diff.strip.empty?
-      custom_instructions = instructions
-      formatted = custom_instructions.gsub("\n", "\n        ")
       prompt = <<~PROMPT
         Objectives: #{objectives}
         Iteration: #{iteration}
         Current Pull Request: #{current_diff}
 
         Instructions:
-        #{formatted}
+        #{instructions.gsub("\n", "\n        ")}
       PROMPT
 
       CodexService.new(prompt).call
