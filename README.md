@@ -7,7 +7,7 @@ Internator is a Ruby-based CLI tool that automates iterative pull request improv
  ## Requirements
 
  - Ruby (>= 2.5).
- - [Codex CLI](https://github.com/openai/codex) installed.
+ - [Codex CLI](https://github.com/openai/codex) installed (>= 0.3.0).
  - Environment variable `OPENAI_API_KEY` set to your OpenAI API key.
 
  ## Installation
