@@ -40,11 +40,8 @@ Internator reads custom instructions from a YAML file at `~/.internator_config.y
 ```yaml
 # ~/.internator_config.yml
 instructions: |
-  1. If there are changes in the PR, first check if it has already been completed; if so, do nothing.
-  2. Make ONLY one incremental change.
-  3. Prioritize completing main objectives.
-  4. Do not overuse code comments; if the method name says it all, comments are not necessary.
-  5. Please treat files as if Vim were saving them with `set binary` and `set noeol`, i.e. do not add a final newline at the end of the file.
+  1. Do not overuse code comments; if the method name says it all, comments are not necessary.
+  2. Please treat files as if Vim were saving them with `set binary` and `set noeol`, i.e. do not add a final newline at the end of the file.
 ```
 
 When present, Internator will use these instructions instead of the built-in defaults.
