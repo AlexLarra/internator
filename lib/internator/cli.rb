@@ -45,7 +45,6 @@ module Internator
       <<~INSTRUCTIONS.chomp
       Mandatory instructions:
       #{mandatory}
-
       Custom instructions:
       #{custom}
       INSTRUCTIONS
