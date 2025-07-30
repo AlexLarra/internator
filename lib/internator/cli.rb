@@ -119,11 +119,33 @@ module Internator
       nil
     end
 
+    def self.current_branch
+      `git rev-parse --abbrev-ref HEAD`.strip
+    end
+
+    def self.git_parent_branch
+      if ['master', 'main', 'develop', 'development'].include?(current_branch)
+        return nil
+      end
+
+      parent_branch_cmd = %{
+        git show-branch | grep '*' | grep -v "$(git rev-parse --abbrev-ref HEAD)" | head -n1 | sed 's/.*\\[\\(.*\\)\\].*/\\1/' | sed 's/[\\^~].*//'
+      }
+
+      parent_branch = `#{parent_branch_cmd}`.strip
+
+      return nil if parent_branch.empty?
+
+      parent_branch
+    rescue => e
+      puts "Error: #{e.message}"
+      nil
+    end
+
     # Executes one Codex iteration by diffing against the appropriate base branch
     def self.codex_cycle(objectives, iteration)
       # Determine configured upstream and current branch name
       upstream = `git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null`.strip
-      current_branch = `git rev-parse --abbrev-ref HEAD`.strip
       # Choose diff base:
       # 1) If upstream is tracking current branch, use remote default branch
       # 2) Else if upstream exists, diff against that
