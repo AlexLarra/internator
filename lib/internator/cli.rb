@@ -83,6 +83,20 @@ module Internator
       remote, default_base = git_detect_default_base&.split("/", 2)
       branch = git_current_branch
 
+      abort "❌Git remote is not detected." unless remote
+      abort "❌Git default branch is not detected." unless default_base
+
+      # Avoid execution if it is default branch and require a new branch
+      if branch == default_base
+        abort "❌ You are on the default branch '#{default_base}'. Please create a new branch before running Internator."
+      end
+
+      if parent_branch && !system("git rev-parse --verify --quiet #{parent_branch} > /dev/null 2>&1")
+        abort "❌ Specified parent branch '#{parent_branch}' does not exist."
+      end
+
+      git_upstream(remote, branch)
+
       iteration = 1
       Signal.trap("INT") do
         puts "\n🛑 Interrupt received. Exiting cleanly..."
@@ -92,18 +106,6 @@ module Internator
       begin
         loop do
           puts "\n🌀 Iteration ##{iteration} - #{Time.now.strftime("%Y-%m-%d %H:%M:%S")}"
-
-          abort "❌Git remote is not detected." unless remote
-          abort "❌Git default branch is not detected." unless default_base
-
-          # Avoid execution if it is default branch and require a new branch
-          if branch == default_base
-            abort "❌ You are on the default branch '#{default_base}'. Please create a new branch before running Internator."
-          end
-
-          if parent_branch && !system("git rev-parse --verify --quiet #{parent_branch} > /dev/null 2>&1")
-            abort "❌ Specified parent branch '#{parent_branch}' does not exist."
-          end
 
           exit_code = codex_cycle(objectives, iteration, remote, default_base, branch, parent_branch)
           if exit_code != 0
@@ -147,8 +149,7 @@ module Internator
       `git rev-parse --abbrev-ref HEAD`.strip
     end
 
-    # Executes one Codex iteration by diffing against the parent or default branch
-    def self.codex_cycle(objectives, iteration, remote, default_base, branch, parent_branch = nil)
+    def self.git_upstream(remote, branch)
       upstream = `git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null`.strip
 
       if upstream.empty?
@@ -158,9 +159,13 @@ module Internator
         upstream = `git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null`.strip
       end
 
+      upstream
+    end
+
+    # Executes one Codex iteration by diffing against the parent or default branch
+    def self.codex_cycle(objectives, iteration, remote, default_base, branch, parent_branch = nil)
       # Determine base branch: user-specified parent or detected default
       base = parent_branch || default_base
-      abort "❌ Could not determine base branch. Please specify a parent_branch." unless base
       current_diff = `git diff #{base} 2>/dev/null`
       current_diff = "No initial changes" if current_diff.strip.empty?
       prompt = <<~PROMPT
