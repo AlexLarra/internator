@@ -140,23 +140,22 @@ module Internator
       nil
     end
 
-    # Executes one Codex iteration by diffing against the appropriate base branch
+    # Executes one Codex iteration by diffing against the parent branch
     def self.codex_cycle(objectives, iteration)
-      # Determine configured upstream and current branch name
       upstream = `git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null`.strip
-      # Choose diff base:
-      # 1) If upstream is tracking current branch, use remote default branch
-      # 2) Else if upstream exists, diff against that
-      # 3) Otherwise fallback to remote default branch or master
-      if !upstream.empty? && upstream.split('/').last == git_current_branch
-        base = git_detect_default_base || upstream
-      elsif !upstream.empty?
-        base = upstream
-      else
-        base = git_detect_default_base || 'master'
+
+      if upstream.empty?
+        # As upstream is not configured, push the current branch and set upstream to remote
+        branch = git_current_branch
+        remotes = `git remote`.split("\n").reject(&:empty?)
+        remote = remotes.include?("origin") ? "origin" : remotes.first
+        puts "🔄 No upstream configured for branch '#{branch}'. Sending to #{remote}..."
+        system("git push -u #{remote} #{branch}")
+        upstream = `git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null`.strip
       end
-      # Get the diff against the chosen base
-      current_diff = `git diff #{base} 2>/dev/null`
+
+      # Get the diff against the parent branch
+      current_diff = `git diff #{git_parent_branch} 2>/dev/null`
       current_diff = "No initial changes" if current_diff.strip.empty?
       prompt = <<~PROMPT
         Objectives: #{objectives}

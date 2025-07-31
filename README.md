@@ -18,7 +18,7 @@ gem install internator
 
  ## Usage
 
-Push to Github your new empty branch and run the `internator` command:
+Create your new empty branch and run the `internator` command:
 
 ```bash
 internator "<PR Objectives>" [delay_mins]
