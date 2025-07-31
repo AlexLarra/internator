@@ -140,19 +140,19 @@ module Internator
     # Executes one Codex iteration by diffing against the parent or default branch
     def self.codex_cycle(objectives, iteration, parent_branch = nil)
       upstream = `git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null`.strip
+      branch = git_current_branch
+      base_ref = git_detect_default_base
+      remote, default_base = base_ref&.split("/", 2)
 
-      if upstream.empty?
+      if upstream.empty? && remote && branch
         # As upstream is not configured, push the current branch and set upstream to remote
-        branch = git_current_branch
-        remotes = `git remote`.split("\n").reject(&:empty?)
-        remote = remotes.include?("origin") ? "origin" : remotes.first
         puts "🔄 No upstream configured for branch '#{branch}'. Sending to #{remote}..."
         system("git push -u #{remote} #{branch}")
         upstream = `git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null`.strip
       end
 
       # Determine base branch: user-specified parent or detected default
-      base = parent_branch || git_detect_default_base&.split("/", 2)&.last
+      base = parent_branch || default_base
       abort "❌ Could not determine base branch. Please specify a parent_branch." unless base
       current_diff = `git diff #{base} 2>/dev/null`
       current_diff = "No initial changes" if current_diff.strip.empty?
