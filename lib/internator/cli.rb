@@ -78,6 +78,10 @@ module Internator
       when 3
         delay_mins = Integer(args[1]) rescue abort("❌ Invalid delay_mins: must be an integer")
         parent_branch = args[2]
+
+        unless system("git rev-parse --verify --quiet #{parent_branch} > /dev/null 2>&1")
+          abort "❌ Specified parent branch '#{parent_branch}' does not exist."
+        end
       end
 
       iteration = 1
