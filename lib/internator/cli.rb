@@ -79,6 +79,12 @@ module Internator
       begin
         loop do
           puts "\n🌀 Iteration ##{iteration} - #{Time.now.strftime("%Y-%m-%d %H:%M:%S")}"
+
+          # Avoid execution if it is default branch and require a new branch
+          if (default_base = git_detect_default_base&.split("/", 2).last) && git_current_branch == default_base
+            abort "❌ You are on the default branch '#{default_base}'. Please create a new branch before running Internator."
+          end
+
           exit_code = codex_cycle(objectives, iteration)
           if exit_code != 0
             puts "🚨 Codex process exited with code #{exit_code}. Stopping."
@@ -124,7 +130,7 @@ module Internator
     end
 
     def self.git_parent_branch
-      return if git_current_branch == git_detect_default_base&.split("/")&.last
+      return if git_current_branch == git_detect_default_base&.split("/", 2)&.last
 
       parent_branch_cmd = %{
         git show-branch | grep '*' | grep -v "$(git rev-parse --abbrev-ref HEAD)" | head -n1 | sed 's/.*\\[\\(.*\\)\\].*/\\1/' | sed 's/[\\^~].*//'
