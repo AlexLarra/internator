@@ -59,16 +59,42 @@ module Internator
         abort "❌ OPENAI_API_KEY not set. Please set the environment variable."
       end
 
-      if args.empty? || args.size > 2
-        abort "❌ Usage: internator \"<PR Objectives>\" [delay_mins]"
+      # Parse arguments: objectives, optional delay (minutes), optional parent_branch
+      if args.empty? || args.size > 3
+        abort "❌ Usage: internator \"<PR Objectives>\" [delay_mins] [parent_branch]"
       end
 
       objectives = args[0]
-      delay_mins = if args[1]
-                     Integer(args[1]) rescue abort("❌ Invalid delay_mins: must be an integer")
-                   else
-                     0
-                   end
+      delay_mins = 0
+      parent_branch = nil
+      case args.size
+      when 2
+        # single extra arg: integer delay or parent branch
+        begin
+          delay_mins = Integer(args[1])
+        rescue ArgumentError
+          parent_branch = args[1]
+        end
+      when 3
+        delay_mins = Integer(args[1]) rescue abort("❌ Invalid delay_mins: must be an integer")
+        parent_branch = args[2]
+      end
+
+      remote, default_base = git_detect_default_base&.split("/", 2)
+      branch = git_current_branch
+
+      abort "❌ Git remote is not detected." unless remote
+      abort "❌ Git default branch is not detected." unless default_base
+
+      if branch == default_base
+        abort "❌ You are on the default branch '#{default_base}'. Please create a new branch before running Internator."
+      end
+
+      if parent_branch && !system("git rev-parse --verify --quiet #{parent_branch} > /dev/null 2>&1")
+        abort "❌ Specified parent branch '#{parent_branch}' does not exist."
+      end
+
+      git_upstream(remote, branch)
 
       iteration = 1
       Signal.trap("INT") do
@@ -79,15 +105,14 @@ module Internator
       begin
         loop do
           puts "\n🌀 Iteration ##{iteration} - #{Time.now.strftime("%Y-%m-%d %H:%M:%S")}"
-          exit_code = codex_cycle(objectives, iteration)
+
+          exit_code = codex_cycle(objectives, iteration, remote, default_base, branch, parent_branch)
           if exit_code != 0
-            puts "🚨 Codex process exited with code #{exit_code}. Stopping."
-            break
+            abort "🚨 Codex process exited with code #{exit_code}. Stopping."
           end
 
           if `git status --porcelain`.strip.empty?
-            puts "🎉 Objectives completed; no new changes. Exiting loop..."
-            break
+            abort "🎉 Objectives completed; no new changes. Exiting loop..."
           end
 
           auto_commit
@@ -103,7 +128,7 @@ module Internator
     end
 
     # Detect the repository's default branch across remotes (e.g., main, master, develop)
-    def self.detect_default_base
+    def self.git_detect_default_base
       remotes = `git remote`.split("\n").reject(&:empty?)
       remotes.unshift('origin') unless remotes.include?('origin')
       remotes.each do |remote|
@@ -119,23 +144,27 @@ module Internator
       nil
     end
 
-    # Executes one Codex iteration by diffing against the appropriate base branch
-    def self.codex_cycle(objectives, iteration)
-      # Determine configured upstream and current branch name
+    def self.git_current_branch
+      `git rev-parse --abbrev-ref HEAD`.strip
+    end
+
+    def self.git_upstream(remote, branch)
       upstream = `git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null`.strip
-      current_branch = `git rev-parse --abbrev-ref HEAD`.strip
-      # Choose diff base:
-      # 1) If upstream is tracking current branch, use remote default branch
-      # 2) Else if upstream exists, diff against that
-      # 3) Otherwise fallback to remote default branch or master
-      if !upstream.empty? && upstream.split('/').last == current_branch
-        base = detect_default_base || upstream
-      elsif !upstream.empty?
-        base = upstream
-      else
-        base = detect_default_base || 'master'
+
+      if upstream.empty?
+        # As upstream is not configured, push the current branch and set upstream to remote
+        puts "🔄 No upstream configured for branch '#{branch}'. Sending to #{remote}..."
+        system("git push -u #{remote} #{branch}")
+        upstream = `git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null`.strip
       end
-      # Get the diff against the chosen base
+
+      upstream
+    end
+
+    # Executes one Codex iteration by diffing against the parent or default branch
+    def self.codex_cycle(objectives, iteration, remote, default_base, branch, parent_branch = nil)
+      # Determine base branch: user-specified parent or detected default
+      base = parent_branch || default_base
       current_diff = `git diff #{base} 2>/dev/null`
       current_diff = "No initial changes" if current_diff.strip.empty?
       prompt = <<~PROMPT
