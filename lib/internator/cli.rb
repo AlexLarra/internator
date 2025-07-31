@@ -86,7 +86,6 @@ module Internator
       abort "❌ Git remote is not detected." unless remote
       abort "❌ Git default branch is not detected." unless default_base
 
-      # Avoid execution if it is default branch and require a new branch
       if branch == default_base
         abort "❌ You are on the default branch '#{default_base}'. Please create a new branch before running Internator."
       end
