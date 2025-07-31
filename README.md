@@ -17,15 +17,15 @@ gem install internator
 ```
 
  ## Usage
-
 Create your new empty branch and run the `internator` command:
 
 ```bash
-internator "<PR Objectives>" [delay_mins]
+internator "<PR Objectives>" [delay_mins] [parent_branch]
 ```
 
- - `<PR Objectives>`: Description of what the pull request should achieve.
- - `[delay_mins]`: (Optional) Minutes to wait between commits (default: 0).
+- `<PR Objectives>`: Description of what the pull request should achieve.
+- `[delay_mins]`: (Optional) Minutes to wait between commits (default: 0).
+- `[parent_branch]`: (Optional) Branch name to diff against (default: detected repository default branch).
 
 Example:
 ```bash

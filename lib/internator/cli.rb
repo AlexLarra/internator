@@ -59,16 +59,26 @@ module Internator
         abort "❌ OPENAI_API_KEY not set. Please set the environment variable."
       end
 
-      if args.empty? || args.size > 2
-        abort "❌ Usage: internator \"<PR Objectives>\" [delay_mins]"
+      # Parse arguments: objectives, optional delay (minutes), optional parent_branch
+      if args.empty? || args.size > 3
+        abort "❌ Usage: internator \"<PR Objectives>\" [delay_mins] [parent_branch]"
       end
 
       objectives = args[0]
-      delay_mins = if args[1]
-                     Integer(args[1]) rescue abort("❌ Invalid delay_mins: must be an integer")
-                   else
-                     0
-                   end
+      delay_mins = 0
+      parent_branch = nil
+      case args.size
+      when 2
+        # single extra arg: integer delay or parent branch
+        begin
+          delay_mins = Integer(args[1])
+        rescue ArgumentError
+          parent_branch = args[1]
+        end
+      when 3
+        delay_mins = Integer(args[1]) rescue abort("❌ Invalid delay_mins: must be an integer")
+        parent_branch = args[2]
+      end
 
       iteration = 1
       Signal.trap("INT") do
@@ -85,7 +95,7 @@ module Internator
             abort "❌ You are on the default branch '#{default_base}'. Please create a new branch before running Internator."
           end
 
-          exit_code = codex_cycle(objectives, iteration)
+          exit_code = codex_cycle(objectives, iteration, parent_branch)
           if exit_code != 0
             abort "🚨 Codex process exited with code #{exit_code}. Stopping."
           end
@@ -127,25 +137,8 @@ module Internator
       `git rev-parse --abbrev-ref HEAD`.strip
     end
 
-    def self.git_parent_branch
-      return if git_current_branch == git_detect_default_base&.split("/", 2)&.last
-
-      parent_branch_cmd = %{
-        git show-branch | grep '*' | grep -v "$(git rev-parse --abbrev-ref HEAD)" | head -n1 | sed 's/.*\\[\\(.*\\)\\].*/\\1/' | sed 's/[\\^~].*//'
-      }
-
-      parent_branch = `#{parent_branch_cmd}`.strip
-
-      return nil if parent_branch.empty?
-
-      parent_branch
-    rescue => e
-      puts "Error: #{e.message}"
-      nil
-    end
-
-    # Executes one Codex iteration by diffing against the parent branch
-    def self.codex_cycle(objectives, iteration)
+    # Executes one Codex iteration by diffing against the parent or default branch
+    def self.codex_cycle(objectives, iteration, parent_branch = nil)
       upstream = `git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null`.strip
 
       if upstream.empty?
@@ -158,8 +151,10 @@ module Internator
         upstream = `git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null`.strip
       end
 
-      # Get the diff against the parent branch
-      current_diff = `git diff #{git_parent_branch} 2>/dev/null`
+      # Determine base branch: user-specified parent or detected default
+      base = parent_branch || git_detect_default_base&.split("/", 2)&.last
+      abort "❌ Could not determine base branch. Please specify a parent_branch." unless base
+      current_diff = `git diff #{base} 2>/dev/null`
       current_diff = "No initial changes" if current_diff.strip.empty?
       prompt = <<~PROMPT
         Objectives: #{objectives}
