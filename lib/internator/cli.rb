@@ -87,13 +87,11 @@ module Internator
 
           exit_code = codex_cycle(objectives, iteration)
           if exit_code != 0
-            puts "🚨 Codex process exited with code #{exit_code}. Stopping."
-            break
+            abort "🚨 Codex process exited with code #{exit_code}. Stopping."
           end
 
           if `git status --porcelain`.strip.empty?
-            puts "🎉 Objectives completed; no new changes. Exiting loop..."
-            break
+            abort "🎉 Objectives completed; no new changes. Exiting loop..."
           end
 
           auto_commit
