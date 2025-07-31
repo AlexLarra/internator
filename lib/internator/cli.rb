@@ -78,10 +78,6 @@ module Internator
       when 3
         delay_mins = Integer(args[1]) rescue abort("❌ Invalid delay_mins: must be an integer")
         parent_branch = args[2]
-
-        unless system("git rev-parse --verify --quiet #{parent_branch} > /dev/null 2>&1")
-          abort "❌ Specified parent branch '#{parent_branch}' does not exist."
-        end
       end
 
       iteration = 1
@@ -97,6 +93,10 @@ module Internator
           # Avoid execution if it is default branch and require a new branch
           if (default_base = git_detect_default_base&.split("/", 2).last) && git_current_branch == default_base
             abort "❌ You are on the default branch '#{default_base}'. Please create a new branch before running Internator."
+          end
+
+          if parent_branch && !system("git rev-parse --verify --quiet #{parent_branch} > /dev/null 2>&1")
+            abort "❌ Specified parent branch '#{parent_branch}' does not exist."
           end
 
           exit_code = codex_cycle(objectives, iteration, parent_branch)
