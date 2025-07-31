@@ -83,8 +83,8 @@ module Internator
       remote, default_base = git_detect_default_base&.split("/", 2)
       branch = git_current_branch
 
-      abort "❌Git remote is not detected." unless remote
-      abort "❌Git default branch is not detected." unless default_base
+      abort "❌ Git remote is not detected." unless remote
+      abort "❌ Git default branch is not detected." unless default_base
 
       # Avoid execution if it is default branch and require a new branch
       if branch == default_base
