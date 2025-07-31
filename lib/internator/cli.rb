@@ -80,6 +80,9 @@ module Internator
         parent_branch = args[2]
       end
 
+      remote, default_base = git_detect_default_base&.split("/", 2)
+      branch = git_current_branch
+
       iteration = 1
       Signal.trap("INT") do
         puts "\n🛑 Interrupt received. Exiting cleanly..."
@@ -90,8 +93,11 @@ module Internator
         loop do
           puts "\n🌀 Iteration ##{iteration} - #{Time.now.strftime("%Y-%m-%d %H:%M:%S")}"
 
+          abort "❌Git remote is not detected." unless remote
+          abort "❌Git default branch is not detected." unless default_base
+
           # Avoid execution if it is default branch and require a new branch
-          if (default_base = git_detect_default_base&.split("/", 2).last) && git_current_branch == default_base
+          if branch == default_base
             abort "❌ You are on the default branch '#{default_base}'. Please create a new branch before running Internator."
           end
 
@@ -99,7 +105,7 @@ module Internator
             abort "❌ Specified parent branch '#{parent_branch}' does not exist."
           end
 
-          exit_code = codex_cycle(objectives, iteration, parent_branch)
+          exit_code = codex_cycle(objectives, iteration, remote, default_base, branch, parent_branch)
           if exit_code != 0
             abort "🚨 Codex process exited with code #{exit_code}. Stopping."
           end
@@ -142,13 +148,10 @@ module Internator
     end
 
     # Executes one Codex iteration by diffing against the parent or default branch
-    def self.codex_cycle(objectives, iteration, parent_branch = nil)
+    def self.codex_cycle(objectives, iteration, remote, default_base, branch, parent_branch = nil)
       upstream = `git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null`.strip
-      branch = git_current_branch
-      base_ref = git_detect_default_base
-      remote, default_base = base_ref&.split("/", 2)
 
-      if upstream.empty? && remote && branch
+      if upstream.empty?
         # As upstream is not configured, push the current branch and set upstream to remote
         puts "🔄 No upstream configured for branch '#{branch}'. Sending to #{remote}..."
         system("git push -u #{remote} #{branch}")
