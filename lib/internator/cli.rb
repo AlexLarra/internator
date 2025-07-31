@@ -103,7 +103,7 @@ module Internator
     end
 
     # Detect the repository's default branch across remotes (e.g., main, master, develop)
-    def self.detect_default_base
+    def self.git_detect_default_base
       remotes = `git remote`.split("\n").reject(&:empty?)
       remotes.unshift('origin') unless remotes.include?('origin')
       remotes.each do |remote|
@@ -119,14 +119,12 @@ module Internator
       nil
     end
 
-    def self.current_branch
+    def self.git_current_branch
       `git rev-parse --abbrev-ref HEAD`.strip
     end
 
     def self.git_parent_branch
-      if ['master', 'main', 'develop', 'development'].include?(current_branch)
-        return nil
-      end
+      return if git_current_branch == git_detect_default_base&.split("/")&.last
 
       parent_branch_cmd = %{
         git show-branch | grep '*' | grep -v "$(git rev-parse --abbrev-ref HEAD)" | head -n1 | sed 's/.*\\[\\(.*\\)\\].*/\\1/' | sed 's/[\\^~].*//'
@@ -150,12 +148,12 @@ module Internator
       # 1) If upstream is tracking current branch, use remote default branch
       # 2) Else if upstream exists, diff against that
       # 3) Otherwise fallback to remote default branch or master
-      if !upstream.empty? && upstream.split('/').last == current_branch
-        base = detect_default_base || upstream
+      if !upstream.empty? && upstream.split('/').last == git_current_branch
+        base = git_detect_default_base || upstream
       elsif !upstream.empty?
         base = upstream
       else
-        base = detect_default_base || 'master'
+        base = git_detect_default_base || 'master'
       end
       # Get the diff against the chosen base
       current_diff = `git diff #{base} 2>/dev/null`
