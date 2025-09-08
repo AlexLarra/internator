@@ -12,6 +12,8 @@ module Internator
       command = [
         "codex",
         "exec",
+        "-c",
+        "preferred_auth_method=apikey",
         "--full-auto",
         @instruction
       ]
