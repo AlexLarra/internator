@@ -13,7 +13,7 @@ module Internator
     def call
       command = <<~CMD
         printenv OPENAI_API_KEY | codex login --with-api-key &&
-        codex exec -c preferred_auth_method=apikey --full-auto #{Shellwords.escape(@instruction)}
+        codex exec --full-auto #{Shellwords.escape(@instruction)}
       CMD
       system(command)
       $?.exitstatus
