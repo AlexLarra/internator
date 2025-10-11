@@ -180,13 +180,12 @@ module Internator
 
     # Generate a concise commit message for the given diff using OpenAI
     def self.generate_commit_message(diff)
-      api_key = ENV["OPENAI_API_KEY"]
       uri = URI("https://api.openai.com/v1/chat/completions")
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
       headers = {
         "Content-Type" => "application/json",
-        "Authorization" => "Bearer #{api_key}"
+        "Authorization" => "Bearer #{ENV["OPENAI_API_KEY"]}"
       }
       body = {
         model: "gpt-4o-mini",
