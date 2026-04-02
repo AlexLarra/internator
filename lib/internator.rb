@@ -1,6 +1,6 @@
-require "internator/version"
-require "internator/codex_service"
-require "internator/cli"
+require 'internator/version'
+require 'internator/opencode_service'
+require 'internator/cli'
 
 module Internator
 end
