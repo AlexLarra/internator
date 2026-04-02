@@ -1,6 +1,3 @@
-require 'net/http'
-require 'uri'
-require 'json'
 require 'tempfile'
 require 'yaml'
 
@@ -52,8 +49,6 @@ module Internator
 
     def self.run(args = ARGV)
       abort "❌ 'opencode' CLI is not installed or not in PATH." unless system('which opencode > /dev/null 2>&1')
-
-      abort '❌ OPENAI_API_KEY not set. Please set the environment variable.' if ENV['OPENAI_API_KEY'].to_s.strip.empty?
 
       # Parse arguments: objectives, optional delay (minutes), optional parent_branch
       abort '❌ Usage: internator "<PR Objectives>" [delay_mins] [parent_branch]' if args.empty? || args.size > 3
@@ -171,31 +166,13 @@ module Internator
       OpencodeService.new(prompt).call
     end
 
-    # Generate a concise commit message for the given diff using OpenAI
     def self.generate_commit_message(diff)
-      uri = URI('https://api.openai.com/v1/chat/completions')
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-      headers = {
-        'Content-Type' => 'application/json',
-        'Authorization' => "Bearer #{ENV['OPENAI_API_KEY']}"
-      }
-      body = {
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: 'You are a helpful assistant that generates concise git commit messages.' },
-          { role: 'user', content: "Generate a concise commit message for the following diff:\n\n#{diff}" }
-        ],
-        temperature: 0.3
-      }
-      response = http.post(uri.request_uri, JSON.generate(body), headers)
-      if response.is_a?(Net::HTTPSuccess)
-        json = JSON.parse(response.body)
-        msg = json.dig('choices', 0, 'message', 'content')
-        msg.strip if msg
-      end
-    rescue StandardError
-      nil
+      prompt = "Generate a concise commit message for the following diff:\n\n#{diff}"
+      stdout, status = OpencodeService.new(prompt).call(return_output: true)
+      return nil unless status == 0
+
+      msg = stdout.to_s.strip
+      msg.empty? ? nil : msg
     end
 
     def self.auto_commit
