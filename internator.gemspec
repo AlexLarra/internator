@@ -6,8 +6,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["AlexLarra"]
   spec.email         = ["clausrybnic@gmail.com"]
 
-  spec.summary       = "CLI tool that automates iterative pull request improvements using OpenAI's Codex"
-  spec.description   = "Internator is a Ruby-based CLI tool that automates iterative pull request improvements using OpenAI's Codex. It cycles through objectives, makes incremental changes, automatically commits and pushes each update, and optionally waits between iterations."
+  spec.summary       = "CLI tool that automates iterative pull request improvements using Opencode"
+  spec.description   = "Internator is a Ruby-based CLI tool that automates iterative pull request improvements using Opencode. It cycles through objectives, makes incremental changes, automatically commits and pushes each update, and optionally waits between iterations."
   spec.homepage      = "https://github.com/AlexLarra/internator"
   spec.license       = "MIT"
 

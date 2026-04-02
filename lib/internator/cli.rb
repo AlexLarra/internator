@@ -43,10 +43,10 @@ module Internator
         end
 
       <<~INSTRUCTIONS.chomp
-        Main instructions:
-        #{main}
-        Secondary instructions:
-        #{secondary}
+      Main instructions:
+      #{main}
+      Secondary instructions:
+      #{secondary}
       INSTRUCTIONS
     end
 
@@ -104,7 +104,7 @@ module Internator
         loop do
           puts "\n🌀 Iteration ##{iteration} - #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
 
-          exit_code = codex_cycle(objectives, iteration, remote, default_base, branch, parent_branch)
+          exit_code = opencode_cycle(objectives, iteration, remote, default_base, branch, parent_branch)
           abort "🚨 Opencode process exited with code #{exit_code}. Stopping." if exit_code != 0
 
           abort '🎉 Objectives completed; no new changes. Exiting loop...' if `git status --porcelain`.strip.empty?
@@ -154,8 +154,8 @@ module Internator
       upstream
     end
 
-    # Executes one Codex iteration by diffing against the parent or default branch
-    def self.codex_cycle(objectives, iteration, _remote, default_base, _branch, parent_branch = nil)
+    # Executes one Opencode iteration by diffing against the parent or default branch
+    def self.opencode_cycle(objectives, iteration, _remote, default_base, _branch, parent_branch = nil)
       # Determine base branch: user-specified parent or detected default
       base = parent_branch || default_base
       current_diff = `git diff #{base} 2>/dev/null`
