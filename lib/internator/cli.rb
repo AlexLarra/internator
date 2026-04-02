@@ -169,10 +169,10 @@ module Internator
     def self.generate_commit_message(diff)
       prompt = "Generate a concise commit message for the following diff:\n\n#{diff}"
       stdout, status = OpencodeService.new(prompt).call(return_output: true)
-      return nil unless status == 0
-
       msg = stdout.to_s.strip
-      msg.empty? ? nil : msg
+      return 'Some changes' if status != 0 || msg.empty?
+
+      msg
     end
 
     def self.auto_commit
