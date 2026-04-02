@@ -7,7 +7,7 @@ Internator is a Ruby-based CLI tool that automates iterative pull request improv
  ## Requirements
 
  - Ruby (>= 2.5).
- - `opencode` CLI installed and available in `PATH`.
+ - `opencode` CLI installed.
 
  ## Installation
 
