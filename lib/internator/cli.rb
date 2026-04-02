@@ -1,8 +1,8 @@
-require "net/http"
-require "uri"
-require "json"
-require "tempfile"
-require "yaml"
+require 'net/http'
+require 'uri'
+require 'json'
+require 'tempfile'
+require 'yaml'
 
 module Internator
   # Command-line interface for the Internator gem
@@ -17,7 +17,7 @@ module Internator
         else
           {}
         end
-      rescue => e
+      rescue StandardError => e
         warn "⚠️ Could not parse config file #{CONFIG_FILE}: #{e.message}"
         {}
       end
@@ -43,26 +43,20 @@ module Internator
         end
 
       <<~INSTRUCTIONS.chomp
-      Main instructions:
-      #{main}
-      Secondary instructions:
-      #{secondary}
+        Main instructions:
+        #{main}
+        Secondary instructions:
+        #{secondary}
       INSTRUCTIONS
     end
 
     def self.run(args = ARGV)
-      unless system("which codex > /dev/null 2>&1")
-        abort "❌ 'codex' CLI is not installed or not in PATH. Please install it from https://github.com/openai/codex"
-      end
+      abort "❌ 'opencode' CLI is not installed or not in PATH." unless system('which opencode > /dev/null 2>&1')
 
-      if ENV["OPENAI_API_KEY"].to_s.strip.empty?
-        abort "❌ OPENAI_API_KEY not set. Please set the environment variable."
-      end
+      abort '❌ OPENAI_API_KEY not set. Please set the environment variable.' if ENV['OPENAI_API_KEY'].to_s.strip.empty?
 
       # Parse arguments: objectives, optional delay (minutes), optional parent_branch
-      if args.empty? || args.size > 3
-        abort "❌ Usage: internator \"<PR Objectives>\" [delay_mins] [parent_branch]"
-      end
+      abort '❌ Usage: internator "<PR Objectives>" [delay_mins] [parent_branch]' if args.empty? || args.size > 3
 
       objectives = args[0]
       delay_mins = 0
@@ -76,15 +70,19 @@ module Internator
           parent_branch = args[1]
         end
       when 3
-        delay_mins = Integer(args[1]) rescue abort("❌ Invalid delay_mins: must be an integer")
+        delay_mins = begin
+          Integer(args[1])
+        rescue StandardError
+          abort('❌ Invalid delay_mins: must be an integer')
+        end
         parent_branch = args[2]
       end
 
-      remote, default_base = git_detect_default_base&.split("/", 2)
+      remote, default_base = git_detect_default_base&.split('/', 2)
       branch = git_current_branch
 
-      abort "❌ Git remote is not detected." unless remote
-      abort "❌ Git default branch is not detected." unless default_base
+      abort '❌ Git remote is not detected.' unless remote
+      abort '❌ Git default branch is not detected.' unless default_base
 
       if branch == default_base
         abort "❌ You are on the default branch '#{default_base}'. Please create a new branch before running Internator."
@@ -97,33 +95,29 @@ module Internator
       git_upstream(remote, branch)
 
       iteration = 1
-      Signal.trap("INT") do
+      Signal.trap('INT') do
         puts "\n🛑 Interrupt received. Exiting cleanly..."
         exit
       end
 
       begin
         loop do
-          puts "\n🌀 Iteration ##{iteration} - #{Time.now.strftime("%Y-%m-%d %H:%M:%S")}"
+          puts "\n🌀 Iteration ##{iteration} - #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
 
           exit_code = codex_cycle(objectives, iteration, remote, default_base, branch, parent_branch)
-          if exit_code != 0
-            abort "🚨 Codex process exited with code #{exit_code}. Stopping."
-          end
+          abort "🚨 Opencode process exited with code #{exit_code}. Stopping." if exit_code != 0
 
-          if `git status --porcelain`.strip.empty?
-            abort "🎉 Objectives completed; no new changes. Exiting loop..."
-          end
+          abort '🎉 Objectives completed; no new changes. Exiting loop...' if `git status --porcelain`.strip.empty?
 
           auto_commit
-          puts "⏳ Waiting #{delay_mins} minutes for next iteration... Current time: #{Time.now.strftime("%Y-%m-%d %H:%M:%S")}"
+          puts "⏳ Waiting #{delay_mins} minutes for next iteration... Current time: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
           sleep(delay_mins * 60)
           iteration += 1
         end
-      rescue => e
+      rescue StandardError => e
         puts "🚨 Critical error: #{e.message}"
       ensure
-        puts "\n🏁 Process completed - #{Time.now.strftime("%Y-%m-%d %H:%M:%S")}"
+        puts "\n🏁 Process completed - #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
       end
     end
 
@@ -135,11 +129,10 @@ module Internator
         # Try to resolve remote HEAD via rev-parse
         ref = `git rev-parse --abbrev-ref #{remote}/HEAD 2>/dev/null`.strip
         return ref unless ref.empty?
+
         # Fallback to symbolic-ref
         sym = `git symbolic-ref refs/remotes/#{remote}/HEAD 2>/dev/null`.strip
-        if sym.start_with?('refs/remotes/')
-          return sym.sub('refs/remotes/', '')
-        end
+        return sym.sub('refs/remotes/', '') if sym.start_with?('refs/remotes/')
       end
       nil
     end
@@ -162,11 +155,11 @@ module Internator
     end
 
     # Executes one Codex iteration by diffing against the parent or default branch
-    def self.codex_cycle(objectives, iteration, remote, default_base, branch, parent_branch = nil)
+    def self.codex_cycle(objectives, iteration, _remote, default_base, _branch, parent_branch = nil)
       # Determine base branch: user-specified parent or detected default
       base = parent_branch || default_base
       current_diff = `git diff #{base} 2>/dev/null`
-      current_diff = "No initial changes" if current_diff.strip.empty?
+      current_diff = 'No initial changes' if current_diff.strip.empty?
       prompt = <<~PROMPT
         Objectives: #{objectives}
         Iteration: #{iteration}
@@ -175,33 +168,33 @@ module Internator
         #{instructions}
       PROMPT
 
-      CodexService.new(prompt).call
+      OpencodeService.new(prompt).call
     end
 
     # Generate a concise commit message for the given diff using OpenAI
     def self.generate_commit_message(diff)
-      uri = URI("https://api.openai.com/v1/chat/completions")
+      uri = URI('https://api.openai.com/v1/chat/completions')
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
       headers = {
-        "Content-Type" => "application/json",
-        "Authorization" => "Bearer #{ENV["OPENAI_API_KEY"]}"
+        'Content-Type' => 'application/json',
+        'Authorization' => "Bearer #{ENV['OPENAI_API_KEY']}"
       }
       body = {
-        model: "gpt-4o-mini",
+        model: 'gpt-4o-mini',
         messages: [
-          { role: "system", content: "You are a helpful assistant that generates concise git commit messages." },
-          { role: "user", content: "Generate a concise commit message for the following diff:\n\n#{diff}" }
+          { role: 'system', content: 'You are a helpful assistant that generates concise git commit messages.' },
+          { role: 'user', content: "Generate a concise commit message for the following diff:\n\n#{diff}" }
         ],
         temperature: 0.3
       }
       response = http.post(uri.request_uri, JSON.generate(body), headers)
       if response.is_a?(Net::HTTPSuccess)
         json = JSON.parse(response.body)
-        msg = json.dig("choices", 0, "message", "content")
-        return msg.strip if msg
+        msg = json.dig('choices', 0, 'message', 'content')
+        msg.strip if msg
       end
-    rescue
+    rescue StandardError
       nil
     end
 
@@ -221,14 +214,14 @@ module Internator
           first_line = commit_msg.lines.first.to_s.strip
           puts "✅ Commit made: #{first_line}"
         else
-          puts "❌ Error committing"
+          puts '❌ Error committing'
         end
       end
 
       if system('git', 'push')
-        puts "✅ Push successful"
+        puts '✅ Push successful'
       else
-        puts "❌ Error pushing to remote"
+        puts '❌ Error pushing to remote'
       end
     end
   end

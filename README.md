@@ -2,12 +2,12 @@
 
 # Internator
 
-Internator is a Ruby-based CLI tool that automates iterative pull request improvements using OpenAI's Codex. It cycles through objectives, makes incremental changes, automatically commits and pushes each update, and optionally waits between iterations.
+Internator is a Ruby-based CLI tool that automates iterative pull request improvements using OpenCode. It cycles through objectives, makes incremental changes, automatically commits and pushes each update, and optionally waits between iterations.
 
  ## Requirements
 
  - Ruby (>= 2.5).
- - [Codex CLI](https://github.com/openai/codex) installed (v 0.46.0).
+ - `opencode` CLI installed and available in `PATH`.
  - Environment variable `OPENAI_API_KEY` set to your OpenAI API key.
 
  ## Installation
